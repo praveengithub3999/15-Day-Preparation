@@ -18,6 +18,7 @@ Day: 1
 The solution is case-sensitive, so uppercase and lowercase letters are treated as different characters.
 
 ### Code:
+
 def first_non_repeating(text):
     text = text.replace(" ", "")
     freq = {}
