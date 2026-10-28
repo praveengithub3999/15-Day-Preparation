@@ -358,3 +358,192 @@ I learned how to remove duplicate elements from a list while preserving their fi
 ## 6. What I Found Difficult:
 
 Initially, I found it difficult to understand how to preserve the original order while removing duplicates. I also needed practice understanding how the sliding window updates its sum by removing the outgoing element and adding the incoming element. Debugging the `"Not found"` message helped me understand the difference between an `if/else` block and a `for/else` block.
+
+
+# 15-Day Preparation — Day 3: HTTP & FastAPI Basics
+
+**Name:** Bellamkonda Praveen Kumar
+**Date:** 28/10/2026  
+**Day:** 3 — HTTP & FastAPI Basics
+
+## 1. HTTP Methods and Status Codes
+
+| HTTP Method | Purpose | Example Status Code |
+|---|---|---|
+| GET | Retrieve data | 200 OK |
+| POST | Create a new resource | 201 Created |
+| PUT | Replace an existing resource | 200 OK |
+| PATCH | Partially update a resource | 200 OK |
+| DELETE | Delete a resource | 204 No Content |
+
+These HTTP methods allow clients to communicate with a server and perform operations on resources.
+
+## 2. FastAPI Routes and Parameter Types
+
+I implemented the following routes using FastAPI:
+
+- `GET /items` — Retrieves a list of items.
+- `GET /items?limit=2` — Retrieves a limited number of items using a query parameter.
+- `GET /items/{item_id}` — Retrieves a specific item using a path parameter.
+- `POST /items` — Creates a new item using JSON request data.
+- `POST /upload` — Accepts a file upload using `UploadFile`.
+
+**Path parameter:** Identifies a particular resource, such as `item_id`.
+
+**Query parameter:** Filters or limits results, such as `limit`.
+
+**Request body:** Sends structured data, such as an item's name and price, in JSON format.
+
+## 3. Pydantic Request Model
+
+I used a Pydantic v2 model to validate incoming item data.
+
+from pydantic import BaseModel, Field, field_validator
+
+
+class ItemCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    price: float = Field(gt=0)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError("Item name cannot be empty")
+
+        return value
+
+
+The model ensures that the item name is not empty or whitespace-only, the name does not exceed 100 characters, and the price is greater than zero. Missing or invalid fields produce a `422 Unprocessable Entity` response.
+
+## 4. Response Model and Error Handling
+
+I used an `ItemResponse` Pydantic model to define the structure of successful item responses.
+
+from pydantic import BaseModel
+
+
+class ItemResponse(BaseModel):
+    id: int
+    name: str
+    price: float
+
+I used `response_model=ItemResponse` to validate and document the response structure.
+
+When an item does not exist, the API raises an HTTP exception:
+
+from fastapi import HTTPException
+
+
+raise HTTPException(
+    status_code=404,
+    detail="Item not found"
+)
+
+
+**Status codes used:**
+
+- `200 OK` — Successful retrieval.
+- `201 Created` — Item created successfully.
+- `404 Not Found` — Requested item does not exist.
+- `413 Content Too Large` — Uploaded file exceeds the size limit.
+- `422 Unprocessable Entity` — Request validation failed.
+
+## 5. File Upload Safety Notes
+
+I implemented a basic file upload endpoint using FastAPI's `UploadFile`.
+
+Before using file uploads in production, I would implement these safeguards:
+
+1. Limit file size to prevent excessive memory usage.
+2. Verify the actual file type instead of trusting only the extension or MIME type.
+3. Generate safe server-side filenames and prevent path traversal.
+4. Scan uploaded files for malware.
+5. Require authentication and authorization.
+6. Apply rate limits and user upload quotas.
+7. Store files securely outside the public web directory.
+
+The current endpoint performs basic checks but does not permanently save files or provide complete production-grade security.
+
+## 6. Tests and Sample Responses
+
+### Test 1: Retrieve items
+
+**Request:** `GET /items`
+
+**Expected status:** `200 OK`
+
+[
+  {
+    "id": 1,
+    "name": "Notebook",
+    "price": 50.0
+  },
+  {
+    "id": 2,
+    "name": "Pen",
+    "price": 10.0
+  }
+]
+
+
+### Test 2: Create an item
+
+**Request:** `POST /items`
+
+**Request body:**
+
+{
+  "name": "Keyboard",
+  "price": 750
+}
+
+
+**Expected status:** `201 Created`
+
+{
+  "id": 3,
+  "name": "Keyboard",
+  "price": 750.0
+}
+
+### Test 3: Item not found
+
+**Request:** `GET /items/999`
+
+**Expected status:** `404 Not Found`
+
+{
+  "detail": "Item not found"
+}
+
+### Test 4: Invalid item price
+
+**Request body:**
+
+{
+  "name": "Mouse",
+  "price": -10
+}
+
+**Expected status:** `422 Unprocessable Entity`
+
+### Test 5: File upload
+
+**Request:** `POST /upload`
+
+**Expected status:** `200 OK` for a valid file accepted by the endpoint.
+
+## 8. What I Learned / Questions for Q&A
+
+### What I Learned
+
+- I learned the differences between GET, POST, PUT, PATCH, and DELETE.
+- I learned how to create API routes using FastAPI.
+- I learned how path parameters and query parameters work.
+- I learned how Pydantic v2 validates request data.
+- I learned how response models structure API responses.
+- I learned how to return appropriate HTTP status codes and handle missing resources.
+- I learned how to accept file uploads and identify security risks.
